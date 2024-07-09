@@ -26,11 +26,7 @@ def save_package_info(package_info):
     db.session.add(package)
     db.session.commit()
 
-def publish():
-    if current_app.config['REQUIRE_ADMIN_TO_PUBLISH']:
-        if not current_user.admin:
-            return 'You must be an administrator of this server to publish!', 403
-            
+def publish():    
     data = json.loads(request.form.get('json'))
     
     if not allowed_package_names.match(data['name']):
