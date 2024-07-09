@@ -57,6 +57,13 @@ def publish():
         file.save(file_path)
         
         save_package_info(package_data)
+        
+        user_packages = json.loads(current_user.packages)
+        if data['name'] not in user_packages:
+            user_packages.append(data['name'])
+            current_user.packages = json.dumps(user_packages)
+            db.session.commit()
+        
         return 'Package published successfully!', 200
     else:
         return f'Version {new_version} already exists for {data["name"]}.', 400
