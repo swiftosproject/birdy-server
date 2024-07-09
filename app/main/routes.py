@@ -14,6 +14,14 @@ def install_route(package_name, package_version):
     filename = f"{package_name}-{package_version}.tar.xz"
     return send_from_directory(package_dir, filename)
 
+@main.route('/packages/<package_name>/latest.tar.xz', methods=['GET'])
+def install_latest_route(package_name):
+    package = Package.query.filter_by(name=package_name).order_by(Package.version.desc()).first()
+    package_version = package.version
+    package_dir = os.path.join(current_app.root_path, 'packages', package_name)
+    filename = f"{package_name}-{package_version}.tar.xz"
+    return send_from_directory(package_dir, filename)
+
 @main.route('/packages/<package_name>/<package_version>.json', methods=['GET'])
 def package_info_route(package_name, package_version):
     package = Package.query.filter_by(name=package_name, version=package_version).first()
