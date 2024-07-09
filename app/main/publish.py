@@ -8,7 +8,7 @@ from ..models import User, Package
 from .. import db
 
 allowed_package_names = re.compile(r'^[0-9A-Za-z-]{3,30}$')
-allowed_versions = re.compile(r'^\d+\.\d+(-beta)?$')
+allowed_versions = re.compile(r'^\d+\.\d+(-(?:beta|alpha)?\d*)?$')
 
 def get_package_info(package_name, package_version=None):
     if package_version:
