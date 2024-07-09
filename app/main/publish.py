@@ -27,6 +27,10 @@ def save_package_info(package_info):
     db.session.commit()
 
 def publish():
+    if current_app.config['REQUIRE_ADMIN_TO_PUBLISH']:
+        if not current_user.admin:
+            return 'You must be an administrator of this server to publish!', 403
+            
     data = json.loads(request.form.get('json'))
     
     if not allowed_package_names.match(data['name']):
@@ -38,8 +42,13 @@ def publish():
     package_info_list = get_package_info(data['name'])
     
     if package_info_list:
+        if not current_app.config['ALLOW_PUBLISHING_NEW_RELEASES']:
+            return 'Publishing new releases is disabled on this server.', 403
         if data['name'] not in current_user.packages:
             return f'You are not the original owner of {data["name"]}.', 401
+
+    if not current_app.config['ALLOW_PUBLISHING_NEW_PACKAGES']:
+        return 'Publishing new packages is disabled on this server.', 403
     
     new_version = data['version']
     

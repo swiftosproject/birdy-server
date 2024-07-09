@@ -69,9 +69,6 @@ def latest_package_info_route(package_name):
 @main.route('/publish', methods=['POST'])
 @login_required
 def publish_route():
-    if not current_app.config['ALLOW_PUBLISHING']:
-        return 'Publishing is disabled on this server.', 403
-
     if current_app.config['REQUIRE_ADMIN_TO_PUBLISH']:
         if not current_user.admin:
             return 'You must be an administrator of this server to publish!', 403
