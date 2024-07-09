@@ -7,6 +7,6 @@ def start():
     while True:
         command = input()
         try:
-            eval(command)
+            exec(command)
         except Exception as e:
             print(f"{e}")
