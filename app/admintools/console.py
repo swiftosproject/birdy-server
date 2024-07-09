@@ -6,4 +6,7 @@ from .. import db
 def start():
     while True:
         command = input()
-        eval(command)
+        try:
+            eval(command)
+        except Exception as e:
+            print(f"{e}")
