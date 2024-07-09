@@ -13,6 +13,9 @@ def install_route(package_name, package_version):
     if not current_user.is_authenticated and current_app.config['REQUIRE_LOGIN_TO_INSTALL']:
         return current_app.login_manager.unauthorized()
 
+    if not current_app.config['ALLOW_INSTALLATION']:
+        return 'Installation is not currently enabled on this server.', 403
+
     package_dir = os.path.join(current_app.root_path, 'packages', package_name)
     filename = f"{package_name}-{package_version}.tar.xz"
     return send_from_directory(package_dir, filename)
@@ -21,6 +24,9 @@ def install_route(package_name, package_version):
 def install_latest_route(package_name):
     if not current_user.is_authenticated and current_app.config['REQUIRE_LOGIN_TO_INSTALL']:
         return current_app.login_manager.unauthorized()
+
+    if not current_app.config['ALLOW_INSTALLATION']:
+        return 'Installation is not currently enabled on this server.', 403
 
     package = Package.query.filter_by(name=package_name).order_by(Package.version.desc()).first()
     package_version = package.version

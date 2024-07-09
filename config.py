@@ -1,4 +1,5 @@
 class Config:
+    ALLOW_INSTALLATION = True
     ALLOW_LOGIN = True
     ALLOW_REGISTRATION = True
     ALLOW_PUBLISHING = True
