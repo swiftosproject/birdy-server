@@ -14,6 +14,35 @@ def install_route(package_name, package_version):
     filename = f"{package_name}-{package_version}.tar.xz"
     return send_from_directory(package_dir, filename)
 
+@main.route('/packages/<package_name>/<package_version>.json', methods=['GET'])
+def package_info_route(package_name, package_version):
+    package = Package.query.filter_by(name=package_name, version=package_version).first()
+    package_data = {
+        "id": package.version,
+        "name": package_name,
+        "description": package.description,
+        "version": package_version,
+        "dependencies": package.dependencies
+    }
+
+    return jsonify(package_data), 200
+
+@main.route('/packages/<package_name>/latest.json', methods=['GET'])
+def latest_package_info_route(package_name):
+    package = Package.query.filter_by(name=package_name).order_by(Package.version.desc()).first()
+    if package is None:
+        return jsonify({"error": "Package not found"}), 404
+    
+    package_data = {
+        "id": package.id,
+        "name": package_name,
+        "description": package.description,
+        "version": package.version,
+        "dependencies": package.dependencies
+    }
+    
+    return jsonify(package_data), 200
+
 @main.route('/publish', methods=['POST'])
 @login_required
 def publish_route():
