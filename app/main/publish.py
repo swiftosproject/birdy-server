@@ -38,7 +38,6 @@ def publish():
         if not package_info_list or new_version > max([pkg.version for pkg in package_info_list]):
             package_data = {
                 'name': data['name'],
-                'author': current_user.username,
                 'description': data['description'],
                 'version': new_version,
                 'dependencies': data.get('dependencies', [])
@@ -47,7 +46,6 @@ def publish():
             file_path = f'{current_app.root_path}/packages/{data['name']}/{data['name']}-{new_version}.tar.xz'
             os.makedirs(os.path.dirname(file_path), exist_ok=True)
             file.save(file_path)
-            package_data['file'] = file_path
             save_package_info(package_data)
             return 'Package published successfully!', 200
         else:
