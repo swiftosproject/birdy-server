@@ -7,8 +7,8 @@ from . import main
 from ..models import User, Package
 from .. import db
 
-# TODO Add regex for versions to prevent exploitation
 allowed_package_names = re.compile(r'^[0-9A-Za-z-]{3,30}$')
+allowed_versions = re.compile(r'^\d+\.\d+(-beta)?$')
 
 def get_package_info(package_name, package_version=None):
     if package_version:
@@ -28,27 +28,35 @@ def save_package_info(package_info):
 
 def publish():
     data = json.loads(request.form.get('json'))
-    if allowed_package_names.match(data['name']):
-        package_info_list = get_package_info(data['name'])
-        if package_info_list:
-            if data['name'] not in current_user.packages:
-                return f'You are not the original owner of {data["name"]}.', 401
-        
-        new_version = data['version']
-        if not package_info_list or new_version > max([pkg.version for pkg in package_info_list]):
-            package_data = {
-                'name': data['name'],
-                'description': data['description'],
-                'version': new_version,
-                'dependencies': data.get('dependencies', [])
-            }
-            file = request.files['file']
-            file_path = f'{current_app.root_path}/packages/{data['name']}/{data['name']}-{new_version}.tar.xz'
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            file.save(file_path)
-            save_package_info(package_data)
-            return 'Package published successfully!', 200
-        else:
-            return f'Version {new_version} already exists for {data["name"]}.', 400
-    else:
+    
+    if not allowed_package_names.match(data['name']):
         return 'Invalid package name', 400
+    
+    if not allowed_versions.match(data['version']):
+        return 'Invalid package version', 400
+    
+    package_info_list = get_package_info(data['name'])
+    
+    if package_info_list:
+        if data['name'] not in current_user.packages:
+            return f'You are not the original owner of {data["name"]}.', 401
+    
+    new_version = data['version']
+    
+    if not package_info_list or new_version > max([pkg.version for pkg in package_info_list]):
+        package_data = {
+            'name': data['name'],
+            'description': data['description'],
+            'version': new_version,
+            'dependencies': data.get('dependencies', [])
+        }
+        
+        file = request.files['file']
+        file_path = f'{current_app.root_path}/packages/{data['name']}/{data['name']}-{new_version}.tar.xz'
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        file.save(file_path)
+        
+        save_package_info(package_data)
+        return 'Package published successfully!', 200
+    else:
+        return f'Version {new_version} already exists for {data["name"]}.', 400
