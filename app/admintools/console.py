@@ -69,6 +69,10 @@ def start():
 
 def add_user(username, mail, password, admin):
     with app.app_context():
+        if admin.lower() == "true":
+            admin = True
+        else:
+            admin = False
         hashed_password = generate_password_hash(password)
         user = User(username=username, mail=mail, password=hashed_password, admin=admin)
         db.session.add(user)
