@@ -42,9 +42,9 @@ def publish():
             return 'Publishing new releases is disabled on this server.', 403
         if data['name'] not in current_user.packages:
             return f'You are not the original owner of {data["name"]}.', 401
-
-    if not current_app.config['ALLOW_PUBLISHING_NEW_PACKAGES']:
-        return 'Publishing new packages is disabled on this server.', 403
+    else:
+        if not current_app.config['ALLOW_PUBLISHING_NEW_PACKAGES']:
+            return 'Publishing new packages is disabled on this server.', 403
     
     new_version = data['version']
     
