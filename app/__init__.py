@@ -26,6 +26,9 @@ def create_app():
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
+    from .admintools import admintools as admintools_blueprint
+    app.register_blueprint(admintools_blueprint)
+
     with app.app_context():
         db.create_all()
 

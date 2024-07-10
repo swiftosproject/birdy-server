@@ -1,5 +1,3 @@
 from flask import Blueprint
 
-main = Blueprint('admintools', __name__)
-
-from . import console
+admintools = Blueprint('admintools', __name__)
