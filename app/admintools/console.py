@@ -3,6 +3,7 @@ from werkzeug.security import generate_password_hash
 from .. import db, create_app
 from ..models import User
 from flask import current_app
+from pynput import keyboard
 
 app = create_app()
 
@@ -11,6 +12,7 @@ Available commands:
 1. users.add <username> <email> <password> <admin>
 2. users.remove <username>
 3. users.edit <username> <attribute> <new_value>
+4. users.list
 """
 
 def start():
@@ -38,6 +40,12 @@ def start():
             _, username, attribute, new_value = parts
             edit_user(username, attribute, new_value)
 
+        elif command == "users.list":
+            list_users()
+
+        elif command == "help":
+            print(help_message)
+
         elif command == "exit":
             exit(0)
 
@@ -56,7 +64,7 @@ def start():
         exit(0)
 
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"Error: {e}")
         print(help_message)
 
 def add_user(username, mail, password, admin):
@@ -89,6 +97,19 @@ def edit_user(username, attribute, new_value):
             print(f"User {username}'s {attribute} updated successfully.")
         else:
             print(f"User {username} not found.")
+
+def list_users():
+    with app.app_context():
+        users = User.query.all()
+        for user in users:
+            print("--------------------")
+            print(f"User ID: {user.id}")
+            print(f"Username: {user.username}")
+            print(f"Email: {user.mail}")
+            print(f"Packages: {user.packages}")
+            print(f"Admin: {user.admin}")
+            print("--------------------")
+
 
 def clear():
     if name == 'nt':
