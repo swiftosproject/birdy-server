@@ -1,5 +1,6 @@
 from flask import jsonify, render_template, request, abort, current_app
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 import json
 import os
 import re
@@ -21,54 +22,67 @@ def save_package_info(package_info):
         name=package_info['name'],
         description=package_info['description'],
         version=package_info['version'],
-        dependencies=package_info['dependencies']
+        dependencies=package_info['dependencies'],
+        files=package_info['files']
     )
     db.session.add(package)
     db.session.commit()
 
-def publish():    
+def publish():
     data = json.loads(request.form.get('json'))
-    
+
     if not allowed_package_names.match(data['name']):
         return 'Invalid package name', 400
-    
+
     if not allowed_versions.match(data['version']):
         return 'Invalid package version', 400
-    
+
     package_info_list = get_package_info(data['name'])
-    
+
     if package_info_list:
         if not current_app.config['ALLOW_PUBLISHING_NEW_RELEASES']:
             return 'Publishing new releases is disabled on this server.', 403
-        if data['name'] not in current_user.packages:
+        if data['name'] not in json.loads(current_user.packages):
             return f'You are not the original owner of {data["name"]}.', 401
     else:
         if not current_app.config['ALLOW_PUBLISHING_NEW_PACKAGES']:
             return 'Publishing new packages is disabled on this server.', 403
-    
+
+    if current_app.config['REQUIRE_ADMIN_TO_PUBLISH']:
+        if not current_user.admin:
+            return 'You must be an administrator of this server to publish!', 403
+
     new_version = data['version']
-    
-    if not package_info_list or new_version > max([pkg.version for pkg in package_info_list]):
+
+    if not package_info_list or new_version > max(pkg.version for pkg in package_info_list):
         package_data = {
             'name': data['name'],
             'description': data['description'],
             'version': new_version,
-            'dependencies': data.get('dependencies', [])
+            'dependencies': data.get('dependencies', []),
+            'files': []
         }
-        
-        file = request.files['file']
-        file_path = f'{current_app.root_path}/packages/{data['name']}/{data['name']}-{new_version}.tar.xz'
-        os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        file.save(file_path)
-        
+
+        files = request.files
+        for file_key in files:
+            file = files[file_key]
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(current_app.root_path, 'packages', data['name'], f"{new_version}", filename)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            file.save(file_path)
+            package_data['files'].append(filename)
+
         save_package_info(package_data)
-        
+
         user_packages = json.loads(current_user.packages)
         if data['name'] not in user_packages:
             user_packages.append(data['name'])
             current_user.packages = json.dumps(user_packages)
             db.session.commit()
-        
+
         return 'Package published successfully!', 200
     else:
         return f'Version {new_version} already exists for {data["name"]}.', 400
+
+if __name__ == '__main__':
+    app.run(debug=True)

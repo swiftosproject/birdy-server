@@ -8,33 +8,17 @@ from ..models import User, Package
 from .. import db
 from .publish import publish
 
-@main.route('/packages/<package_name>/<package_version>.tar.xz', methods=['GET'])
-def install_route(package_name, package_version):
+@main.route('/packages/<package_name>/<package_version>/<filename>', methods=['GET'])
+def install_route(package_name, package_version, filename):
     if not current_app.config['ALLOW_INSTALLATION']:
         return 'Installation is not currently enabled on this server.', 403
 
     if not current_user.is_authenticated and current_app.config['REQUIRE_LOGIN_TO_INSTALL']:
+        if not current_user.admin and current_app.config['REQUIRE_ADMIN_TO_INSTALL']:
+            return current_app.login_manager.unauthorized()
         return current_app.login_manager.unauthorized()
 
-    if not current_user.admin and current_app.config['REQUIRE_ADMIN_TO_INSTALL']:
-        return current_app.login_manager.unauthorized()
-
-    package_dir = os.path.join(current_app.root_path, 'packages', package_name)
-    filename = f"{package_name}-{package_version}.tar.xz"
-    return send_from_directory(package_dir, filename)
-
-@main.route('/packages/<package_name>/latest.tar.xz', methods=['GET'])
-def install_latest_route(package_name):
-    if not current_app.config['ALLOW_INSTALLATION']:
-        return 'Installation is not currently enabled on this server.', 403
-
-    if not current_user.is_authenticated and current_app.config['REQUIRE_LOGIN_TO_INSTALL']:
-        return current_app.login_manager.unauthorized()
-
-    package = Package.query.filter_by(name=package_name).order_by(Package.version.desc()).first()
-    package_version = package.version
-    package_dir = os.path.join(current_app.root_path, 'packages', package_name)
-    filename = f"{package_name}-{package_version}.tar.xz"
+    package_dir = os.path.join(current_app.root_path, 'packages', package_name, package_version)
     return send_from_directory(package_dir, filename)
 
 @main.route('/packages/<package_name>/<package_version>.json', methods=['GET'])
@@ -45,7 +29,8 @@ def package_info_route(package_name, package_version):
         "name": package_name,
         "description": package.description,
         "version": package_version,
-        "dependencies": package.dependencies
+        "dependencies": package.dependencies,
+        "files": package.files
     }
 
     return jsonify(package_data), 200
@@ -61,7 +46,8 @@ def latest_package_info_route(package_name):
         "name": package_name,
         "description": package.description,
         "version": package.version,
-        "dependencies": package.dependencies
+        "dependencies": package.dependencies,
+        "files": package.files
     }
     
     return jsonify(package_data), 200
@@ -69,10 +55,6 @@ def latest_package_info_route(package_name):
 @main.route('/publish', methods=['POST'])
 @login_required
 def publish_route():
-    if current_app.config['REQUIRE_ADMIN_TO_PUBLISH']:
-        if not current_user.admin:
-            return 'You must be an administrator of this server to publish!', 403
-    
     return publish()
 
 @main.route('/userinfo', methods=['GET'])

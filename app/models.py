@@ -17,6 +17,7 @@ class Package(db.Model):
     description = db.Column(db.Text, nullable=False)
     version = db.Column(db.String(20), nullable=False)
     dependencies = db.Column(db.JSON, nullable=False, default=[])
+    files = db.Column(db.JSON, nullable=False, default=[])
 
     __table_args__ = (db.UniqueConstraint(
         'name', 'version', name='_name_version_uc'),)
