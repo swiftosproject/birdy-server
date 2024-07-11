@@ -8,28 +8,47 @@ from .helpmessages import HelpMessages
 
 app = create_app()
 
-def start():
+def interpreter():
+    command = input("> ")
+    execute_command(command)
+
+def help(command):
+    if command == "users.add":
+        print(HelpMessages.users_add_help_message)
+    elif command == "users.remove":
+        print(HelpMessages.users_remove_help_message)
+    elif command == "users.edit":
+        print(HelpMessages.users_edit_help_message)
+    elif command == "users.list":
+        print(HelpMessages.users_list_help_message)
+    elif command in ["users", "users.*"]:
+        print(HelpMessages.user_managment_help)
+    else:
+        print(HelpMessages.help_message)
+
+def execute_command(command):
     try:
-        command = input("> ")
+        parts = command.split()
+        if not parts:
+            raise ValueError("No command provided")
 
-        if command.startswith("users.add"):
-            parts = command.split(" ")
+        command = parts[0]
+
+        if command == "users.add":
             if len(parts) != 5:
-                raise ValueError("Invalid number of arguments for users.add")
-            _, username, mail, password, admin = parts
-            add_user(username, mail, password, admin)
+                raise ValueError("Invalid number of arguments")
+            _, username, email, password, admin = parts
+            add_user(username, email, password, admin)
 
-        elif command.startswith("users.remove"):
-            parts = command.split(" ")
+        elif command == "users.remove":
             if len(parts) != 2:
-                raise ValueError("Invalid number of arguments for users.remove")
+                raise ValueError("Invalid number of arguments")
             _, username = parts
             remove_user(username)
 
-        elif command.startswith("users.edit"):
-            parts = command.split(" ")
+        elif command == "users.edit":
             if len(parts) != 4:
-                raise ValueError("Invalid number of arguments for users.edit")
+                raise ValueError("Invalid number of arguments")
             _, username, attribute, new_value = parts
             edit_user(username, attribute, new_value)
 
@@ -37,12 +56,10 @@ def start():
             list_users()
 
         elif command == "help":
-            help("all")
-
-        elif command.startswith("help "):
-            parts = command.split(" ")
-            _, helpcommand = parts
-            help(helpcommand)
+            if len(parts) == 2:
+                help(parts[1])
+            else:
+                help("all")
 
         elif command == "exit":
             exit(0)
@@ -56,26 +73,9 @@ def start():
     except ValueError as ve:
         print(f"Error: {ve}")
         help(command)
-    
-    except KeyboardInterrupt:
-        exit(0)
 
     except Exception as e:
         print(f"Error: {e}")
-
-def help(command):
-    if command == "users.add":
-        print(HelpMessages.users_add_help_message)
-    elif command == "users.remove":
-        print(HelpMessages.users_remove_help_message)
-    elif command == "users.edit":
-        print(HelpMessages.users_edit_help_message)
-    elif command == "users.list":
-        print(HelpMessages.users_list_help_message)
-    elif command == "users" or command == "users.*":
-        print(HelpMessages.user_managment_help)
-    else:
-        print(HelpMessages.help_message)
 
 def add_user(username, mail, password, admin):
     with app.app_context():
