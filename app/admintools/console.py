@@ -1,19 +1,12 @@
 from os import system, name
 from werkzeug.security import generate_password_hash
 from .. import db, create_app
-from ..models import User
+from ..models import User, Package
 from flask import current_app
 from pynput import keyboard
+from .helpmessages import HelpMessages
 
 app = create_app()
-
-help_message = """
-Available commands:
-1. users.add <username> <email> <password> <admin>
-2. users.remove <username>
-3. users.edit <username> <attribute> <new_value>
-4. users.list
-"""
 
 def start():
     try:
@@ -44,7 +37,12 @@ def start():
             list_users()
 
         elif command == "help":
-            print(help_message)
+            help("all")
+
+        elif command.startswith("help "):
+            parts = command.split(" ")
+            _, helpcommand = parts
+            help(helpcommand)
 
         elif command == "exit":
             exit(0)
@@ -53,19 +51,31 @@ def start():
             clear()
 
         else:
-            print("Invalid command")
-            print(help_message)
+            print("Unknown command")
 
     except ValueError as ve:
         print(f"Error: {ve}")
-        print(help_message)
+        help(command)
     
     except KeyboardInterrupt:
         exit(0)
 
     except Exception as e:
         print(f"Error: {e}")
-        print(help_message)
+
+def help(command):
+    if command == "users.add":
+        print(HelpMessages.users_add_help_message)
+    elif command == "users.remove":
+        print(HelpMessages.users_remove_help_message)
+    elif command == "users.edit":
+        print(HelpMessages.users_edit_help_message)
+    elif command == "users.list":
+        print(HelpMessages.users_list_help_message)
+    elif command == "users" or command == "users.*":
+        print(HelpMessages.user_managment_help)
+    else:
+        print(HelpMessages.help_message)
 
 def add_user(username, mail, password, admin):
     with app.app_context():
