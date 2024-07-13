@@ -104,7 +104,7 @@ def edit_user(username, attribute, new_value):
         user = User.query.filter_by(username=username).first()
         if user:
             if attribute == "password":
-                user.password = generate_password_hash(new_value, method='sha256')
+                user.password = generate_password_hash(new_value)
             else:
                 setattr(user, attribute, new_value)
             db.session.commit()
