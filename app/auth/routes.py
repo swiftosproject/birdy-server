@@ -1,6 +1,6 @@
 import re
 import json
-from flask import request, jsonify, current_app
+from flask import request, jsonify, current_app, session
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_user, logout_user, login_required, current_user
 from . import auth
@@ -41,6 +41,7 @@ def login():
     user = User.query.filter_by(username=data['username']).first()
     if user and check_password_hash(user.password, data['password']):
         login_user(user)
+        session['user_id'] = user.id
         return 'Logged in successfully!', 200
     return 'Invalid credentials!', 401
 

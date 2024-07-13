@@ -25,7 +25,7 @@ def install_route(package_name, package_version, filename):
 def package_info_route(package_name, package_version):
     package = Package.query.filter_by(name=package_name, version=package_version).first()
     package_data = {
-        "id": package.version,
+        "id": package.id,
         "name": package_name,
         "description": package.description,
         "version": package_version,
