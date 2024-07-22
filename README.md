@@ -14,10 +14,6 @@ python3 run.py
 
 ## Configuration
 
-Here's the documentation on how to configure the Flask application:
-
-## Configuration
-
 Configuration options can be changed in the `config.py` file located in the root of the project.
 
 **Available Configuration Options:**
